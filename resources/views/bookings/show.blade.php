@@ -77,6 +77,8 @@
                     
                     <div class="h-48 relative">
                         <img src="{{ str_starts_with($booking->vehicle->image, 'http') ? $booking->vehicle->image : asset('storage/' . $booking->vehicle->image) }}" 
+                             class="h-full w-full object-cover"
+                             onerror="this.src='https://images.unsplash.com/photo-1552519507-da3b142c6e3d?q=80&w=400'"> 
                              class="w-full h-full object-cover">
                         <div class="absolute inset-0 bg-gradient-to-t from-[#1a1a1a] via-transparent to-transparent"></div>
                         

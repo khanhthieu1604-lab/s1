@@ -62,139 +62,157 @@
     </div>
     @endif
 
-    <div class="container mx-auto px-4 max-w-6xl mt-8">
-        <form action="{{ route('bookings.store') }}" method="POST" id="bookingForm">
+    <div class="container mx-auto px-4 max-w-6xl mt-8" x-data="bookingWizard()">
+        <form action="{{ route('bookings.store') }}" method="POST" id="bookingForm" @submit.prevent="submitForm">
             @csrf
             <input type="hidden" name="vehicle_id" value="{{ $vehicle->id }}">
             <input type="hidden" id="price_per_day" value="{{ $vehicle->price }}">
+            <input type="hidden" id="total_price_input" name="total_price" :value="totalPrice">
 
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
 
-                
+                {{-- WIZARD MAIN COLUMN --}}
                 <div class="lg:col-span-8 space-y-6">
                     
-                    
-                    <div class="bg-white dark:bg-[#121212] rounded-3xl shadow-sm border border-gray-100 dark:border-white/5 p-6 md:p-8 relative overflow-hidden group hover:border-blue-500/30 dark:hover:border-yellow-500/30 transition-all duration-300">
-                        <div class="flex items-center gap-4 mb-6">
-                            <div class="w-10 h-10 rounded-2xl bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 flex items-center justify-center text-lg">
-                                <i class="fa-regular fa-clock"></i>
+                    {{-- STEP 1: SCHEDULE --}}
+                    <div x-show="step === 1" x-transition.duration.500ms class="space-y-6">
+                        <div class="bg-white dark:bg-[#121212] rounded-3xl shadow-sm border border-gray-100 dark:border-white/5 p-6 md:p-8 relative overflow-hidden group hover:border-blue-500/30 dark:hover:border-yellow-500/30 transition-all duration-300">
+                            <div class="flex items-center gap-4 mb-6">
+                                <div class="w-10 h-10 rounded-2xl bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 flex items-center justify-center text-lg">
+                                    <i class="fa-regular fa-clock"></i>
+                                </div>
+                                <h2 class="text-lg font-black text-gray-900 dark:text-white uppercase tracking-tight">Lịch trình của bạn</h2>
                             </div>
-                            <h2 class="text-lg font-black text-gray-900 dark:text-white uppercase tracking-tight">Thời gian thuê</h2>
-                        </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 relative z-10">
-                            
-                            <div class="bg-gray-50 dark:bg-white/5 rounded-2xl p-4 border border-gray-100 dark:border-white/5 hover:border-blue-400 dark:hover:border-yellow-500 transition-colors cursor-pointer" onclick="document.getElementById('start_date_picker')._flatpickr.open()">
-                                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Nhận xe</p>
-                                <div class="flex items-center gap-3">
-                                    <i class="fa-regular fa-calendar text-gray-400"></i>
-                                    <input type="text" name="start_date" id="start_date_picker" required placeholder="Chọn ngày nhận"
-                                        class="bg-transparent border-none p-0 text-sm font-bold text-gray-900 dark:text-white focus:ring-0 w-full cursor-pointer">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 relative z-10">
+                                {{-- Start Date --}}
+                                <div class="bg-gray-50 dark:bg-white/5 rounded-2xl p-4 border border-gray-100 dark:border-white/5 hover:border-blue-400 dark:hover:border-yellow-500 transition-colors cursor-pointer" @click="openStartDate">
+                                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Nhận xe</p>
+                                    <div class="flex items-center gap-3">
+                                        <i class="fa-regular fa-calendar text-gray-400"></i>
+                                        <input type="text" name="start_date" id="start_date_picker" required placeholder="Chọn ngày nhận"
+                                            class="bg-transparent border-none p-0 text-sm font-bold text-gray-900 dark:text-white focus:ring-0 w-full cursor-pointer pointer-events-none">
+                                    </div>
+                                </div>
+
+                                {{-- End Date --}}
+                                <div class="bg-gray-50 dark:bg-white/5 rounded-2xl p-4 border border-gray-100 dark:border-white/5 hover:border-blue-400 dark:hover:border-yellow-500 transition-colors cursor-pointer" @click="openEndDate">
+                                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Trả xe</p>
+                                    <div class="flex items-center gap-3">
+                                        <i class="fa-solid fa-arrow-right-from-bracket text-gray-400"></i>
+                                        <input type="text" name="end_date" id="end_date_picker" required placeholder="Chọn ngày trả"
+                                            class="bg-transparent border-none p-0 text-sm font-bold text-gray-900 dark:text-white focus:ring-0 w-full cursor-pointer pointer-events-none">
+                                    </div>
                                 </div>
                             </div>
 
-                            
-                            <div class="bg-gray-50 dark:bg-white/5 rounded-2xl p-4 border border-gray-100 dark:border-white/5 hover:border-blue-400 dark:hover:border-yellow-500 transition-colors cursor-pointer" onclick="document.getElementById('end_date_picker')._flatpickr.open()">
-                                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Trả xe</p>
-                                <div class="flex items-center gap-3">
-                                    <i class="fa-solid fa-arrow-right-from-bracket text-gray-400"></i>
-                                    <input type="text" name="end_date" id="end_date_picker" required placeholder="Chọn ngày trả"
-                                        class="bg-transparent border-none p-0 text-sm font-bold text-gray-900 dark:text-white focus:ring-0 w-full cursor-pointer">
+                            {{-- Duration Display --}}
+                            <div x-show="days > 0" x-transition class="mt-4">
+                                <div class="bg-blue-50 dark:bg-blue-900/10 rounded-xl p-3 flex items-center justify-between border border-blue-100 dark:border-blue-500/20">
+                                    <span class="text-xs font-bold text-blue-800 dark:text-blue-300 flex items-center gap-2">
+                                        <i class="fa-solid fa-check-circle"></i> Thời gian hợp lệ
+                                    </span>
+                                    <span class="text-sm font-black text-blue-900 dark:text-white"><span x-text="days"></span> Ngày</span>
                                 </div>
-                            </div>
-                        </div>
-
-                        
-                        <div id="duration_box" class="mt-4 hidden animate-fade-in-up">
-                            <div class="bg-blue-50 dark:bg-blue-900/10 rounded-xl p-3 flex items-center justify-between border border-blue-100 dark:border-blue-500/20">
-                                <span class="text-xs font-bold text-blue-800 dark:text-blue-300 flex items-center gap-2">
-                                    <i class="fa-solid fa-check-circle"></i> Thời gian hợp lệ
-                                </span>
-                                <span class="text-sm font-black text-blue-900 dark:text-white"><span id="days_count">0</span> Ngày</span>
                             </div>
                         </div>
                     </div>
 
-                    
-                    <div class="bg-white dark:bg-[#121212] rounded-3xl shadow-sm border border-gray-100 dark:border-white/5 p-6 md:p-8 group hover:border-purple-500/30 transition-all duration-300">
-                        <div class="flex items-center gap-4 mb-6">
-                            <div class="w-10 h-10 rounded-2xl bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 flex items-center justify-center text-lg">
-                                <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    {{-- STEP 2: SERVICES --}}
+                    <div x-show="step === 2" x-transition.duration.500ms class="space-y-6" style="display: none;">
+                        <div class="bg-white dark:bg-[#121212] rounded-3xl shadow-sm border border-gray-100 dark:border-white/5 p-6 md:p-8 group hover:border-purple-500/30 transition-all duration-300">
+                            <div class="flex items-center gap-4 mb-6">
+                                <div class="w-10 h-10 rounded-2xl bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 flex items-center justify-center text-lg">
+                                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                                </div>
+                                <h2 class="text-lg font-black text-gray-900 dark:text-white uppercase tracking-tight">Dịch vụ thượng hạng</h2>
                             </div>
-                            <h2 class="text-lg font-black text-gray-900 dark:text-white uppercase tracking-tight">Dịch vụ thêm</h2>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {{-- Driver --}}
+                                <label class="relative block cursor-pointer group">
+                                    <input type="checkbox" name="services[]" value="driver" @change="toggleService('driver', 500000)" class="peer sr-only">
+                                    <div class="p-5 rounded-2xl border-2 border-gray-100 dark:border-white/10 bg-gray-50 dark:bg-white/5 peer-checked:border-yellow-500 peer-checked:bg-yellow-50 dark:peer-checked:bg-yellow-900/10 transition-all">
+                                        <div class="flex justify-between items-start mb-2">
+                                            <div class="w-8 h-8 rounded-lg bg-white dark:bg-white/10 flex items-center justify-center text-gray-500 dark:text-gray-300 peer-checked:text-yellow-600">
+                                                <i class="fa-solid fa-user-tie"></i>
+                                            </div>
+                                            <span class="text-xs font-bold text-gray-900 dark:text-white bg-white dark:bg-black/50 px-2 py-1 rounded-md shadow-sm">500k/ngày</span>
+                                        </div>
+                                        <p class="font-bold text-gray-900 dark:text-white text-sm mb-1">Thuê tài xế riêng</p>
+                                        <p class="text-xs text-gray-500 dark:text-gray-400">Tài xế chuyên nghiệp, rành đường.</p>
+                                    </div>
+                                    <div class="absolute top-4 right-4 text-yellow-500 opacity-0 peer-checked:opacity-100 transition-opacity transform scale-0 peer-checked:scale-100 duration-200">
+                                        <i class="fa-solid fa-circle-check text-lg"></i>
+                                    </div>
+                                </label>
+
+                                {{-- Insurance --}}
+                                <label class="relative block cursor-pointer group">
+                                    <input type="checkbox" name="services[]" value="insurance" checked @change="toggleService('insurance', 200000)" class="peer sr-only">
+                                    <div class="p-5 rounded-2xl border-2 border-gray-100 dark:border-white/10 bg-gray-50 dark:bg-white/5 peer-checked:border-yellow-500 peer-checked:bg-yellow-50 dark:peer-checked:bg-yellow-900/10 transition-all">
+                                        <div class="flex justify-between items-start mb-2">
+                                            <div class="w-8 h-8 rounded-lg bg-white dark:bg-white/10 flex items-center justify-center text-gray-500 dark:text-gray-300 peer-checked:text-yellow-600">
+                                                <i class="fa-solid fa-shield-halved"></i>
+                                            </div>
+                                            <span class="text-xs font-bold text-gray-900 dark:text-white bg-white dark:bg-black/50 px-2 py-1 rounded-md shadow-sm">200k/ngày</span>
+                                        </div>
+                                        <p class="font-bold text-gray-900 dark:text-white text-sm mb-1">Bảo hiểm chuyến đi</p>
+                                        <p class="text-xs text-gray-500 dark:text-gray-400">Bảo vệ toàn diện xe và người.</p>
+                                    </div>
+                                    <div class="absolute top-4 right-4 text-yellow-500 opacity-0 peer-checked:opacity-100 transition-opacity transform scale-0 peer-checked:scale-100 duration-200">
+                                        <i class="fa-solid fa-circle-check text-lg"></i>
+                                    </div>
+                                </label>
+                            </div>
                         </div>
+                    </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            
-                            <label class="relative block cursor-pointer group">
-                                <input type="checkbox" name="services[]" value="driver" data-price="500000" data-type="per_day" class="service-checkbox peer sr-only">
-                                <div class="p-5 rounded-2xl border-2 border-gray-100 dark:border-white/10 bg-gray-50 dark:bg-white/5 peer-checked:border-yellow-500 peer-checked:bg-yellow-50 dark:peer-checked:bg-yellow-900/10 transition-all">
-                                    <div class="flex justify-between items-start mb-2">
-                                        <div class="w-8 h-8 rounded-lg bg-white dark:bg-white/10 flex items-center justify-center text-gray-500 dark:text-gray-300 peer-checked:text-yellow-600">
-                                            <i class="fa-solid fa-user-tie"></i>
-                                        </div>
-                                        <span class="text-xs font-bold text-gray-900 dark:text-white bg-white dark:bg-black/50 px-2 py-1 rounded-md shadow-sm">500k/ngày</span>
-                                    </div>
-                                    <p class="font-bold text-gray-900 dark:text-white text-sm mb-1">Thuê tài xế riêng</p>
-                                    <p class="text-xs text-gray-500 dark:text-gray-400">Tài xế chuyên nghiệp, rành đường.</p>
+                    {{-- STEP 3: CONCIERGE --}}
+                    <div x-show="step === 3" x-transition.duration.500ms class="space-y-6" style="display: none;">
+                        <div class="bg-white dark:bg-[#121212] rounded-3xl shadow-sm border border-gray-100 dark:border-white/5 p-6 md:p-8">
+                            <div class="flex items-center gap-4 mb-6">
+                                <div class="w-10 h-10 rounded-2xl bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-400 flex items-center justify-center text-lg">
+                                    <i class="fa-regular fa-id-badge"></i>
                                 </div>
-                                <div class="absolute top-4 right-4 text-yellow-500 opacity-0 peer-checked:opacity-100 transition-opacity transform scale-0 peer-checked:scale-100 duration-200">
-                                    <i class="fa-solid fa-circle-check text-lg"></i>
-                                </div>
-                            </label>
+                                <h2 class="text-lg font-black text-gray-900 dark:text-white uppercase tracking-tight">Thông tin xác nhận</h2>
+                            </div>
 
-                            
-                            <label class="relative block cursor-pointer group">
-                                <input type="checkbox" name="services[]" value="insurance" data-price="200000" data-type="per_day" class="service-checkbox peer sr-only" checked>
-                                <div class="p-5 rounded-2xl border-2 border-gray-100 dark:border-white/10 bg-gray-50 dark:bg-white/5 peer-checked:border-yellow-500 peer-checked:bg-yellow-50 dark:peer-checked:bg-yellow-900/10 transition-all">
-                                    <div class="flex justify-between items-start mb-2">
-                                        <div class="w-8 h-8 rounded-lg bg-white dark:bg-white/10 flex items-center justify-center text-gray-500 dark:text-gray-300 peer-checked:text-yellow-600">
-                                            <i class="fa-solid fa-shield-halved"></i>
-                                        </div>
-                                        <span class="text-xs font-bold text-gray-900 dark:text-white bg-white dark:bg-black/50 px-2 py-1 rounded-md shadow-sm">200k/ngày</span>
-                                    </div>
-                                    <p class="font-bold text-gray-900 dark:text-white text-sm mb-1">Bảo hiểm chuyến đi</p>
-                                    <p class="text-xs text-gray-500 dark:text-gray-400">Bảo vệ toàn diện xe và người.</p>
+                            <div class="flex items-center gap-4 p-4 bg-gray-50 dark:bg-white/5 rounded-2xl border border-gray-100 dark:border-white/5 mb-4">
+                                <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-yellow-400 to-yellow-600 flex items-center justify-center text-white font-bold text-lg shadow-md">
+                                    {{ substr(Auth::user()->name, 0, 1) }}
                                 </div>
-                                <div class="absolute top-4 right-4 text-yellow-500 opacity-0 peer-checked:opacity-100 transition-opacity transform scale-0 peer-checked:scale-100 duration-200">
-                                    <i class="fa-solid fa-circle-check text-lg"></i>
+                                <div>
+                                    <p class="font-bold text-gray-900 dark:text-white">{{ Auth::user()->name }}</p>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">{{ Auth::user()->email }} • {{ Auth::user()->phone ?? 'Chưa có SĐT' }}</p>
                                 </div>
+                            </div>
+
+                            <label class="block">
+                                <span class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase ml-1 mb-1 block">Lời nhắn (Tùy chọn)</span>
+                                <textarea name="note" rows="2" placeholder="Ví dụ: Tôi muốn nhận xe tại sân bay..." 
+                                    class="w-full bg-gray-50 dark:bg-black border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-yellow-500 dark:text-white transition resize-none"></textarea>
                             </label>
                         </div>
                     </div>
 
-                    
-                    <div class="bg-white dark:bg-[#121212] rounded-3xl shadow-sm border border-gray-100 dark:border-white/5 p-6 md:p-8">
-                        <div class="flex items-center gap-4 mb-6">
-                            <div class="w-10 h-10 rounded-2xl bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-400 flex items-center justify-center text-lg">
-                                <i class="fa-regular fa-id-badge"></i>
-                            </div>
-                            <h2 class="text-lg font-black text-gray-900 dark:text-white uppercase tracking-tight">Thông tin của bạn</h2>
-                        </div>
+                    {{-- NAVIGATION BUTTONS --}}
+                    <div class="flex justify-between pt-4">
+                         <button type="button" @click="prevStep" x-show="step > 1" class="px-6 py-3 rounded-xl bg-gray-200 dark:bg-white/10 text-black dark:text-white font-bold text-xs uppercase tracking-wider hover:bg-gray-300 dark:hover:bg-white/20 transition">
+                            <i class="fa-solid fa-arrow-left mr-2"></i> Quay lại
+                        </button>
+                        <div x-show="step === 1" class="flex-1"></div> {{-- Spacer --}}
 
-                        <div class="flex items-center gap-4 p-4 bg-gray-50 dark:bg-white/5 rounded-2xl border border-gray-100 dark:border-white/5 mb-4">
-                            <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-yellow-400 to-yellow-600 flex items-center justify-center text-white font-bold text-lg shadow-md">
-                                {{ substr(Auth::user()->name, 0, 1) }}
-                            </div>
-                            <div>
-                                <p class="font-bold text-gray-900 dark:text-white">{{ Auth::user()->name }}</p>
-                                <p class="text-xs text-gray-500 dark:text-gray-400">{{ Auth::user()->email }} • {{ Auth::user()->phone ?? 'Chưa có SĐT' }}</p>
-                            </div>
-                        </div>
-
-                        <label class="block">
-                            <span class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase ml-1 mb-1 block">Lời nhắn (Tùy chọn)</span>
-                            <textarea name="note" rows="2" placeholder="Ví dụ: Tôi muốn nhận xe tại sân bay..." 
-                                class="w-full bg-gray-50 dark:bg-black border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-yellow-500 dark:text-white transition resize-none"></textarea>
-                        </label>
+                        <button type="button" @click="nextStep" x-show="step < 3" :disabled="!isValidStep()" :class="{'opacity-50 cursor-not-allowed': !isValidStep()}" class="px-8 py-3 rounded-xl bg-black dark:bg-white text-white dark:text-black font-bold text-xs uppercase tracking-wider hover:shadow-lg hover:-translate-y-1 transition ml-auto">
+                            Tiếp tục <i class="fa-solid fa-arrow-right ml-2"></i>
+                        </button>
                     </div>
                 </div>
 
-                
+                {{-- RECEIPT STICKY COLUMN --}}
                 <div class="lg:col-span-4 lg:sticky lg:top-24 space-y-6">
-                    
                     <div class="bg-white dark:bg-[#121212] rounded-[2rem] shadow-2xl shadow-gray-200/50 dark:shadow-none border border-gray-100 dark:border-white/5 overflow-hidden">
-                        
+                        {{-- Vehicle Preview --}}
                         <div class="relative h-48 group">
                             <img src="{{ str_starts_with($vehicle->image, 'http') ? $vehicle->image : asset('storage/' . $vehicle->image) }}" 
                                  class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
@@ -207,25 +225,34 @@
                             </div>
                         </div>
 
-                        
+                        {{-- Calculation --}}
                         <div class="p-6">
                             <div class="space-y-3 text-sm mb-6">
                                 <div class="flex justify-between items-center text-gray-600 dark:text-gray-400">
-                                    <span>Giá thuê (<span id="bill_days_display">1</span> ngày)</span>
-                                    <span class="font-bold text-gray-900 dark:text-white" id="bill_rent_total">0đ</span>
+                                    <span>Giá thuê (<span x-text="days">1</span> ngày)</span>
+                                    <span class="font-bold text-gray-900 dark:text-white" x-text="formatMoney(rentTotal)">0đ</span>
                                 </div>
                                 
-                                
-                                <div id="bill_services_list" class="space-y-2 pt-2 border-t border-dashed border-gray-200 dark:border-white/10"></div>
+                                <template x-if="services.driver">
+                                    <div class="flex justify-between items-center text-xs animate-fade-in-up">
+                                        <span class="text-gray-500 dark:text-gray-400">+ Tài xế riêng</span>
+                                        <span class="font-bold text-gray-900 dark:text-white" x-text="formatMoney(serviceCosts.driver * days)"></span>
+                                    </div>
+                                </template>
+                                <template x-if="services.insurance">
+                                    <div class="flex justify-between items-center text-xs animate-fade-in-up">
+                                        <span class="text-gray-500 dark:text-gray-400">+ Bảo hiểm</span>
+                                        <span class="font-bold text-gray-900 dark:text-white" x-text="formatMoney(serviceCosts.insurance * days)"></span>
+                                    </div>
+                                </template>
                             </div>
 
-                            
                             <div class="flex justify-between items-end mb-6 pt-4 border-t border-gray-100 dark:border-white/10">
                                 <div class="text-xs text-gray-500 dark:text-gray-400 font-medium">Tổng thanh toán</div>
-                                <div class="text-2xl font-black text-blue-600 dark:text-yellow-500 tracking-tighter" id="bill_final_total">0đ</div>
+                                <div class="text-2xl font-black text-blue-600 dark:text-yellow-500 tracking-tighter" x-text="formatMoney(totalPrice)">0đ</div>
                             </div>
 
-                            <button type="submit" class="w-full relative group overflow-hidden bg-gray-900 dark:bg-white text-white dark:text-black py-4 rounded-xl font-black text-xs uppercase tracking-widest shadow-lg hover:shadow-xl transition-all hover:-translate-y-1">
+                            <button type="submit" x-show="step === 3" class="w-full relative group overflow-hidden bg-gray-900 dark:bg-white text-white dark:text-black py-4 rounded-xl font-black text-xs uppercase tracking-widest shadow-lg hover:shadow-xl transition-all hover:-translate-y-1">
                                 <span class="relative z-10 group-hover:text-yellow-500 dark:group-hover:text-blue-600 transition-colors flex items-center justify-center gap-2">
                                     Xác nhận đặt xe <i class="fa-solid fa-arrow-right"></i>
                                 </span>
@@ -237,7 +264,6 @@
                             </div>
                         </div>
                     </div>
-
                 </div>
 
             </div>
@@ -247,128 +273,123 @@
 
 <style>
     @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-    @keyframes fadeInDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
     .animate-fade-in-up { animation: fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-    .animate-fade-in-down { animation: fadeInDown 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
 </style>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        
-        const fpConfig = {
-            enableTime: true,
-            dateFormat: "Y-m-d H:i",
-            time_24hr: true,
-            minDate: "today",
-            locale: "vn",
-            disableMobile: "true",
-            minuteIncrement: 30
-        };
+    function bookingWizard() {
+        return {
+            step: 1,
+            pricePerDay: {{ $vehicle->price }},
+            days: 1,
+            rentTotal: 0,
+            totalPrice: 0,
+            startDate: null,
+            endDate: null,
+            services: {
+                driver: false,
+                insurance: true
+            },
+            serviceCosts: {
+                driver: 500000,
+                insurance: 200000
+            },
+            startPicker: null,
+            endPicker: null,
 
-        const startPicker = flatpickr("#start_date_picker", {
-            ...fpConfig,
-            onChange: function(selectedDates, dateStr, instance) {
-                endPicker.set('minDate', dateStr);
-                if (!endPicker.selectedDates.length) {
-                    setTimeout(() => endPicker.open(), 200);
-                }
-                calculate();
-            }
-        });
+            init() {
+                const fpConfig = {
+                    enableTime: true,
+                    dateFormat: "Y-m-d H:i",
+                    time_24hr: true,
+                    minDate: "today",
+                    locale: "vn",
+                    disableMobile: "true",
+                    minuteIncrement: 30
+                };
 
-        const endPicker = flatpickr("#end_date_picker", {
-            ...fpConfig,
-            onChange: function() {
-                calculate();
-            }
-        });
+                this.startPicker = flatpickr("#start_date_picker", {
+                    ...fpConfig,
+                    onChange: (selectedDates, dateStr) => {
+                        this.startDate = selectedDates[0];
+                        this.endPicker.set('minDate', dateStr);
+                        this.calculate();
+                        if (this.isValidStep()) {
+                           // Optional auto open next
+                        }
+                    }
+                });
 
-        
-        const pricePerDay = parseInt(document.getElementById('price_per_day').value);
-        const checkboxes = document.querySelectorAll('.service-checkbox');
-        
-        
-        function animateValue(obj, start, end, duration) {
-            let startTimestamp = null;
-            const step = (timestamp) => {
-                if (!startTimestamp) startTimestamp = timestamp;
-                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-                obj.innerHTML = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(Math.floor(progress * (end - start) + start));
-                if (progress < 1) {
-                    window.requestAnimationFrame(step);
-                }
-            };
-            window.requestAnimationFrame(step);
-        }
-
-        
-        let oldTotal = 0;
-
-        function formatMoney(amount) {
-            return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
-        }
-
-        function calculate() {
-            const startDates = startPicker.selectedDates;
-            const endDates = endPicker.selectedDates;
-            
-            let days = 0;
-            let rentTotal = 0;
-            let servicesTotal = 0;
-
-            if (startDates.length && endDates.length && endDates[0] > startDates[0]) {
-                const diffTime = Math.abs(endDates[0] - startDates[0]);
-                days = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
-                if (days === 0) days = 1;
+                this.endPicker = flatpickr("#end_date_picker", {
+                    ...fpConfig,
+                    onChange: (selectedDates) => {
+                        this.endDate = selectedDates[0];
+                        this.calculate();
+                    }
+                });
                 
-                document.getElementById('duration_box').classList.remove('hidden');
-            } else {
-                document.getElementById('duration_box').classList.add('hidden');
-                days = 1;
-            }
+                // Initial Calc
+                this.calculate();
+            },
 
-            
-            document.getElementById('days_count').innerText = days;
-            document.getElementById('bill_days_display').innerText = days;
+            openStartDate() {
+                this.startPicker.open();
+            },
 
-            rentTotal = days * pricePerDay;
-            document.getElementById('bill_rent_total').innerText = formatMoney(rentTotal);
+            openEndDate() {
+                this.endPicker.open();
+            },
 
-            
-            const serviceList = document.getElementById('bill_services_list');
-            serviceList.innerHTML = '';
-            
-            checkboxes.forEach(cb => {
-                if (cb.checked) {
-                    const price = parseInt(cb.dataset.price);
-                    const type = cb.dataset.type;
-                    let cost = (type === 'per_day') ? price * days : price;
-                    const label = cb.parentElement.querySelector('p.font-bold').innerText;
-
-                    servicesTotal += cost;
-                    
-                    const div = document.createElement('div');
-                    div.className = 'flex justify-between items-center text-xs animate-fade-in-up';
-                    div.innerHTML = `<span class="text-gray-500 dark:text-gray-400">+ ${label}</span><span class="font-bold text-gray-900 dark:text-white">${formatMoney(cost)}</span>`;
-                    serviceList.appendChild(div);
+            calculate() {
+                if (this.startDate && this.endDate && this.endDate > this.startDate) {
+                    const diffTime = Math.abs(this.endDate - this.startDate);
+                    this.days = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+                    if (this.days === 0) this.days = 1;
+                } else {
+                    this.days = 1;
                 }
-            });
 
+                this.rentTotal = this.days * this.pricePerDay;
+                
+                let servicesTotal = 0;
+                if (this.services.driver) servicesTotal += this.serviceCosts.driver * this.days;
+                if (this.services.insurance) servicesTotal += this.serviceCosts.insurance * this.days;
+
+                this.totalPrice = this.rentTotal + servicesTotal;
+            },
+
+            toggleService(service) {
+                this.services[service] = !this.services[service];
+                this.calculate();
+            },
+
+            formatMoney(amount) {
+                return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+            },
+
+            isValidStep() {
+                if (this.step === 1) {
+                    return this.startDate && this.endDate && this.endDate > this.startDate;
+                }
+                return true;
+            },
+
+            nextStep() {
+                if (this.isValidStep()) {
+                    this.step++;
+                }
+            },
+
+            prevStep() {
+                if (this.step > 1) {
+                    this.step--;
+                }
+            },
             
-            const newTotal = rentTotal + servicesTotal;
-            const totalElement = document.getElementById('bill_final_total');
-            
-            
-            if (newTotal !== oldTotal) {
-                animateValue(totalElement, oldTotal, newTotal, 500);
-                oldTotal = newTotal;
-            } else {
-                totalElement.innerText = formatMoney(newTotal);
+            submitForm(e) {
+                 e.target.submit();
             }
         }
-        
-        checkboxes.forEach(cb => cb.addEventListener('change', calculate));
-        calculate();
-    });
+    }
 </script>
 @endsection

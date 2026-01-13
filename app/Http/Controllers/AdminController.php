@@ -21,6 +21,42 @@ class AdminController extends Controller
         return true;
     }
 
+    public function stats()
+    {
+        if (!$this->checkAdmin()) abort(403);
+
+        $revenue = Booking::whereIn('status', ['confirmed', 'completed'])->sum('total_price');
+        $pendingBookings = Booking::where('status', 'pending')->count();
+        $totalVehicles = Vehicle::count();
+        $availableCars = Vehicle::where('status', 'available')->count();
+        $rentedCars    = Vehicle::where('status', 'rented')->count();
+        $totalUsers = User::where('role', 'user')->count();
+
+        // Revenue Chart Data (Last 7 Days)
+        $revenueData = [];
+        $chartLabels = [];
+        for ($i = 6; $i >= 0; $i--) {
+            $date = now()->subDays($i);
+            $dayRevenue = Booking::whereIn('status', ['confirmed', 'completed'])
+                ->whereDate('created_at', $date)
+                ->sum('total_price');
+            
+            $revenueData[] = $dayRevenue;
+            $chartLabels[] = $date->format('D'); // Mon, Tue...
+        }
+
+        return response()->json([
+            'revenue' => number_format($revenue),
+            'pendingBookings' => $pendingBookings,
+            'totalVehicles' => $totalVehicles,
+            'availableCars' => $availableCars,
+            'rentedCars' => $rentedCars,
+            'totalUsers' => $totalUsers,
+            'revenueData' => $revenueData,
+            'chartLabels' => $chartLabels
+        ]);
+    }
+
     
     public function index()
     {
@@ -49,6 +85,19 @@ class AdminController extends Controller
         
         $allUsers = User::latest()->paginate(10);
 
+        // Revenue Chart Data (Last 7 Days)
+        $revenueData = [];
+        $chartLabels = [];
+        for ($i = 6; $i >= 0; $i--) {
+            $date = now()->subDays($i);
+            $dayRevenue = Booking::whereIn('status', ['confirmed', 'completed'])
+                ->whereDate('created_at', $date)
+                ->sum('total_price');
+            
+            $revenueData[] = $dayRevenue;
+            $chartLabels[] = $date->format('D'); // Mon, Tue...
+        }
+
         return view('admin.dashboard', compact(
             'revenue', 
             'pendingBookings', 
@@ -57,7 +106,9 @@ class AdminController extends Controller
             'rentedCars', 
             'totalUsers', 
             'recentBookings',
-            'allUsers' 
+            'allUsers',
+            'revenueData',
+            'chartLabels'
         ));
     }
 

@@ -78,7 +78,7 @@
                     <div class="flex gap-4 mb-6">
                         <img src="{{ str_starts_with($booking->vehicle->image, 'http') ? $booking->vehicle->image : asset('storage/' . $booking->vehicle->image) }}" 
                              class="w-24 h-24 object-cover rounded-xl bg-gray-100 dark:bg-gray-800"
-                             onerror="this.src='https://placehold.co/100?text=Car'">
+                             onerror="this.src='https://images.unsplash.com/photo-1552519507-da3b142c6e3d?q=80&w=200'">
                         <div>
                             <p class="text-xs font-bold text-gray-400 uppercase">{{ $booking->vehicle->brand->name ?? 'Xe' }}</p>
                             <h4 class="text-xl font-black text-gray-900 dark:text-white mb-1">{{ $booking->vehicle->name }}</h4>

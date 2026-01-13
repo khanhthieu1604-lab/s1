@@ -99,6 +99,7 @@
                             <label class="block text-[10px] font-black text-gray-500 uppercase mb-2">Ảnh hiện tại</label>
                             <div class="rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 relative group">
                                 <img src="{{ str_starts_with($vehicle->image, 'http') ? $vehicle->image : asset('storage/' . $vehicle->image) }}" 
+                                     class="h-40 w-full object-cover rounded-md" onerror="this.src='https://images.unsplash.com/photo-1552519507-da3b142c6e3d?q=80&w=400'"> 
                                      class="w-full h-48 object-cover group-hover:scale-105 transition duration-500">
                             </div>
                         </div>

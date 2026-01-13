@@ -1,31 +1,46 @@
-# 1. Dùng phiên bản PHP 8.2 chính thức
-FROM php:8.2-cli
+# Stage 1: Build Frontend Assets
+FROM node:20 as frontend
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm install
+COPY . .
+RUN npm run build
 
-# 2. Cài đặt các công cụ cần thiết (zip, git để tải thư viện)
+# Stage 2: Serve with PHP-FPM
+FROM php:8.2-fpm
+
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
     git \
     unzip \
     libpng-dev \
     libonig-dev \
-    libxml2-dev
+    libxml2-dev \
+    libzip-dev \
+    libjpeg62-turbo-dev \
+    libfreetype6-dev \
+    libicu-dev \
+    curl \
+    gnupg \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd intl zip opcache
 
-# 3. Cài các tiện ích mở rộng của PHP (bắt buộc cho Laravel)
-RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
-
-# 4. Cài đặt Composer (Công cụ tải thư viện) - ĐÂY LÀ BƯỚC QUAN TRỌNG NHẤT
+# Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# 5. Thiết lập thư mục làm việc
-WORKDIR /var/www/html
+# Set working directory
+WORKDIR /var/www
 
-# 6. Copy toàn bộ code từ máy tính vào trong Docker
+# Copy application files
 COPY . .
 
-# 7. Chạy lệnh cài đặt thư viện (Khắc phục lỗi thiếu vendor/autoload.php)
+# Copy built assets from frontend stage
+COPY --from=frontend /app/public/build public/build
+
+# Install PHP dependencies
 RUN composer install --no-dev --optimize-autoloader
 
-# 8. Cấp quyền ghi cho thư mục storage (để web lưu được ảnh và log lỗi)
-RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
+# Set permissions
+RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
 
-# 9. Lệnh khởi động Web (Tự động nhận cổng PORT từ Render)
-CMD php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=$PORT
+CMD ["php-fpm"]

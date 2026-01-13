@@ -15,18 +15,14 @@
     
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
-
     
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js"></script>
-
+    <!-- Scripts loaded via Vite -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <style>
         :root { --accent-gold: #eab308; }
         body { font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased; }
         .font-heading { font-family: 'Montserrat', sans-serif; }
-        .page-fade-in { opacity: 0; }
         [x-cloak] { display: none !important; }
 
         
@@ -50,7 +46,7 @@
         @include('layouts.navigation')
     </header>
 
-    <main id="main-content" class="flex-grow page-fade-in">
+    <main id="main-content" class="flex-grow animate-fade-in-up">
         @if(isset($slot) && $slot->isNotEmpty())
             {{ $slot }}
         @else
@@ -129,17 +125,11 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            
-            if (window.anime) {
-                anime({
-                    targets: '.page-fade-in',
-                    opacity: [0, 1],
-                    translateY: [20, 0],
-                    easing: 'easeOutQuart',
-                    duration: 1000,
-                    delay: 100
-                });
-            }
+            // Remove transparency after load to ensure everything is visible
+            // The animation is now handled by CSS 'animate-fade-in-up' on the main element
+            setTimeout(() => {
+                document.querySelectorAll('.page-fade-in').forEach(el => el.classList.remove('opacity-0'));
+            }, 100);
         });
     </script>
 </body>

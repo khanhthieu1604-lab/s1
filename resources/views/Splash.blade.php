@@ -2,8 +2,7 @@
 
 @section('content')
     
-    <link rel="preload" href="{{ asset('public/videos/trailer.mp4') }}" as="video" type="video/mp4">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+
 
     <style>
         :root {
@@ -75,7 +74,7 @@
             
             <video autoplay muted loop playsinline id="trailer-video" 
                    class="absolute inset-0 w-full h-full object-cover z-0 transition-opacity duration-1000 opacity-0">
-                <source src="{{ asset('public/videos/trailer.mp4') }}" type="video/mp4">
+                <source src="{{ asset('videos/trailer.mp4') }}" type="video/mp4">
             </video>
             
             
@@ -106,7 +105,7 @@
                 
                 <div class="opacity-0 scale-90" id="seq-4">
                     <div class="magnetic-wrap inline-block">
-                        <a href="javascript:void(0)" onclick="navigateToWelcome()" 
+                        <a href="{{ route('home') }}" 
                            class="btn-trailer group flex items-center gap-8 px-16 py-6 bg-white/5 text-white uppercase text-[10px] font-bold tracking-[0.5em] rounded-full">
                             Explore Experience
                             <i class="fa-solid fa-arrow-right-long group-hover:translate-x-4 transition-transform duration-500"></i>
@@ -132,98 +131,115 @@
             
             document.body.style.pointerEvents = 'none';
 
-            anime.timeline({
-                easing: 'easeInOutQuart'
-            })
-            .add({
-                targets: overlay,
-                translateX: ['-100%', '0%'],
-                duration: 600 
-            })
-            .add({
-                targets: '#main-wrapper',
-                scale: 1.1,
-                filter: 'blur(10px)',
-                opacity: 0,
-                duration: 600,
-                offset: '-=600',
-                complete: () => {
-                    window.location.href = "{{ route('home') }}";
-                }
-            });
+            if (window.anime) {
+                anime.timeline({
+                    easing: 'easeInOutQuart'
+                })
+                .add({
+                    targets: overlay,
+                    translateX: ['-100%', '0%'],
+                    duration: 600 
+                })
+                .add({
+                    targets: '#main-wrapper',
+                    scale: 1.1,
+                    filter: 'blur(10px)',
+                    opacity: 0,
+                    duration: 600,
+                    offset: '-=600',
+                    complete: () => {
+                        window.location.href = "{{ route('home') }}";
+                    }
+                });
+            } else {
+                window.location.href = "{{ route('home') }}";
+            }
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            
+             // FAILSAFE: Ensure elements are visible if animation fails
+            setTimeout(() => {
+                const hiddenElements = ['#seq-1', '#seq-2-a', '#seq-2-b', '#seq-3', '#seq-4'];
+                hiddenElements.forEach(selector => {
+                    const el = document.querySelector(selector);
+                    if(el) {
+                        el.classList.remove('opacity-0');
+                        el.style.opacity = '1';
+                    }
+                });
+                document.getElementById('trailer-video').style.opacity = '0.6';
+            }, 2000);
+
             const video = document.getElementById('trailer-video');
             video.oncanplay = () => video.style.opacity = '0.6';
 
-            
-            const tl = anime.timeline({
-                easing: 'easeOutQuart'
-            });
-
-            tl.add({
-                targets: '#seq-1',
-                translateY: ['100%', '0%'],
-                opacity: [0, 1],
-                duration: 800,
-                delay: 400
-            })
-            .add({
-                targets: '#seq-2-a',
-                translateY: [50, 0],
-                opacity: [0, 1],
-                letterSpacing: ['1em', '-0.05em'],
-                duration: 1200,
-                offset: '-=400'
-            })
-            .add({
-                targets: '#seq-2-b',
-                scale: [1.2, 1],
-                opacity: [0, 1],
-                filter: ['blur(15px)', 'blur(0px)'],
-                duration: 1500,
-                offset: '-=1000'
-            })
-            .add({
-                targets: '#seq-3',
-                opacity: [0, 1],
-                duration: 800,
-                offset: '-=800'
-            })
-            .add({
-                targets: '#seq-4',
-                opacity: [0, 1],
-                scale: [0.9, 1],
-                duration: 1000,
-                offset: '-=600'
-            });
-
-            
-            let mouseX = 0;
-            document.addEventListener('mousemove', (e) => {
-                mouseX = (e.clientX / window.innerWidth - 0.5) * 100;
-                anime({
-                    targets: '#bg-scrolling-text',
-                    translateX: mouseX,
-                    duration: 2000,
-                    easing: 'easeOutQuad'
+            if (typeof anime !== 'undefined') {
+                const tl = anime.timeline({
+                    easing: 'easeOutQuart'
                 });
-            });
 
-            
-            const magnetic = document.querySelector('.magnetic-wrap');
-            magnetic.addEventListener('mousemove', (e) => {
-                const rect = magnetic.getBoundingClientRect();
-                const x = (e.clientX - rect.left - rect.width / 2) * 0.4;
-                const y = (e.clientY - rect.top - rect.height / 2) * 0.4;
+                tl.add({
+                    targets: '#seq-1',
+                    translateY: ['100%', '0%'],
+                    opacity: [0, 1],
+                    duration: 800,
+                    delay: 400
+                })
+                .add({
+                    targets: '#seq-2-a',
+                    translateY: [50, 0],
+                    opacity: [0, 1],
+                    letterSpacing: ['1em', '-0.05em'],
+                    duration: 1200,
+                    offset: '-=400'
+                })
+                .add({
+                    targets: '#seq-2-b',
+                    scale: [1.2, 1],
+                    opacity: [0, 1],
+                    filter: ['blur(15px)', 'blur(0px)'],
+                    duration: 1500,
+                    offset: '-=1000'
+                })
+                .add({
+                    targets: '#seq-3',
+                    opacity: [0, 1],
+                    duration: 800,
+                    offset: '-=800'
+                })
+                .add({
+                    targets: '#seq-4',
+                    opacity: [0, 1],
+                    scale: [0.9, 1],
+                    duration: 1000,
+                    offset: '-=600'
+                });
+
                 
-                magnetic.style.transform = `translate3d(${x}px, ${y}px, 0)`;
-            });
-            magnetic.addEventListener('mouseleave', () => {
-                magnetic.style.transform = `translate3d(0, 0, 0)`;
-            });
+                let mouseX = 0;
+                document.addEventListener('mousemove', (e) => {
+                    mouseX = (e.clientX / window.innerWidth - 0.5) * 100;
+                    anime({
+                        targets: '#bg-scrolling-text',
+                        translateX: mouseX,
+                        duration: 2000,
+                        easing: 'easeOutQuad'
+                    });
+                });
+
+                
+                const magnetic = document.querySelector('.magnetic-wrap');
+                magnetic.addEventListener('mousemove', (e) => {
+                    const rect = magnetic.getBoundingClientRect();
+                    const x = (e.clientX - rect.left - rect.width / 2) * 0.4;
+                    const y = (e.clientY - rect.top - rect.height / 2) * 0.4;
+                    
+                    magnetic.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+                });
+                magnetic.addEventListener('mouseleave', () => {
+                    magnetic.style.transform = `translate3d(0, 0, 0)`;
+                });
+            }
         });
     </script>
 @endsection

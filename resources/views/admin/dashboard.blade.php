@@ -4,22 +4,25 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-<div class="bg-white dark:bg-[#050505] min-h-screen py-12 font-sans transition-colors duration-500 relative overflow-hidden">
+<div x-data="adminDashboard()" x-init="init()" class="bg-white dark:bg-[#050505] min-h-screen py-12 font-sans transition-colors duration-500 relative overflow-hidden">
     
-    
+    {{-- Background Glows --}}
     <div class="absolute top-0 left-0 w-[500px] h-[500px] bg-yellow-500/5 rounded-full blur-[120px] -translate-x-1/2 -translate-y-1/2 pointer-events-none"></div>
     <div class="absolute bottom-0 right-0 w-[500px] h-[500px] bg-zinc-500/5 rounded-full blur-[120px] translate-x-1/2 translate-y-1/2 pointer-events-none"></div>
 
     <div class="container mx-auto px-8 max-w-7xl relative z-10">
 
-        
+        {{-- Header --}}
         <div class="mb-12 flex flex-col md:flex-row justify-between items-start md:items-end gap-6 animate-page-entry">
             <div>
                 <p class="text-[10px] font-black text-amber-600 dark:text-amber-500 uppercase tracking-[0.4em] mb-3">Management Console</p>
                 <h1 class="text-5xl font-black text-zinc-900 dark:text-white tracking-tighter uppercase">
                     Admin <span class="opacity-20 italic">Portal</span>
                 </h1>
-                <p class="text-zinc-500 mt-4 text-xs uppercase tracking-widest font-medium">Hệ thống đang hoạt động ổn định. Chào bro, <span class="text-zinc-900 dark:text-zinc-100 font-black">{{ Auth::user()->name }}</span>.</p>
+                <p class="text-zinc-500 mt-4 text-xs uppercase tracking-widest font-medium flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    Hệ thống đang hoạt động. Chào bro, <span class="text-zinc-900 dark:text-zinc-100 font-black">{{ Auth::user()->name }}</span>.
+                </p>
             </div>
             
             <div class="flex items-center gap-4">
@@ -27,20 +30,50 @@
                     <i class="fa-solid fa-eye text-sm"></i> 
                     <span>Live View</span>
                 </a>
-                <button onclick="window.location.reload()" class="w-12 h-12 flex items-center justify-center bg-zinc-900 dark:bg-white text-white dark:text-black rounded-full shadow-2xl hover:scale-110 transition-transform duration-500">
-                    <i class="fa-solid fa-rotate-right text-sm"></i>
+                <button @click="fetchStats(true)" class="w-12 h-12 flex items-center justify-center bg-zinc-900 dark:bg-white text-white dark:text-black rounded-full shadow-2xl hover:scale-110 transition-transform duration-500 relative overflow-hidden">
+                    <i class="fa-solid fa-rotate-right text-sm" :class="{ 'animate-spin': loading }"></i>
                 </button>
             </div>
         </div>
 
-        
+        {{-- LIVE GPS MAP MOCKUP --}}
+        <div class="relative w-full h-64 rounded-[2.5rem] overflow-hidden mb-12 border border-zinc-100 dark:border-white/5 group shadow-2xl">
+            <div class="absolute inset-0 bg-zinc-900">
+                <div class="absolute inset-0 opacity-30" style="background-image: url('https://upload.wikimedia.org/wikipedia/commons/e/ec/World_map_blank_without_borders.svg'); background-size: cover; background-position: center; filter: invert(1);"></div>
+                <div class="absolute inset-0 bg-gradient-to-t from-[#050505] to-transparent"></div>
+            </div>
+            
+            <div class="absolute top-6 left-8">
+                 <span class="flex items-center gap-2 px-3 py-1 rounded-full bg-red-500/20 text-red-500 border border-red-500/30 text-[9px] font-black uppercase tracking-widest animate-pulse">
+                    <span class="w-2 h-2 rounded-full bg-red-500"></span> Live Tracking
+                 </span>
+            </div>
+
+            <div class="absolute top-1/2 left-1/3 w-3 h-3 bg-amber-500 rounded-full animate-ping"></div>
+            <div class="absolute top-1/2 left-1/3 w-3 h-3 bg-amber-500 rounded-full border-2 border-white"></div>
+            <div class="absolute top-1/2 left-1/3 transform -translate-x-1/2 -translate-y-[150%] bg-white text-black text-[8px] font-bold px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+                Ferrari 488 <br> <span class="text-zinc-500">200km/h</span>
+            </div>
+
+            <div class="absolute top-1/3 right-1/4 w-3 h-3 bg-blue-500 rounded-full animate-ping" style="animation-delay: 0.5s"></div>
+            <div class="absolute top-1/3 right-1/4 w-3 h-3 bg-blue-500 rounded-full border-2 border-white"></div>
+
+            <div class="absolute bottom-8 right-8 text-right">
+                <h3 class="text-2xl font-black text-white tracking-tighter">Global Fleet</h3>
+                <p class="text-zinc-500 text-[10px] uppercase tracking-widest"><span x-text="rentedCars"></span> Active Trips</p>
+            </div>
+        </div>
+
+        {{-- Stats Grid --}}
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
             
-            
+            {{-- Revenue --}}
             <div class="bg-zinc-900 dark:bg-white rounded-[2rem] p-8 shadow-2xl group relative overflow-hidden transition-all duration-500 hover:-translate-y-2">
                 <div class="relative z-10">
                     <p class="text-zinc-400 dark:text-zinc-500 text-[9px] font-black uppercase tracking-[0.3em] mb-2">Doanh thu tổng</p>
-                    <h3 class="text-3xl font-black text-white dark:text-black tracking-tighter">{{ number_format($revenue) }}<span class="text-sm ml-1 opacity-50">đ</span></h3>
+                    <h3 class="text-3xl font-black text-white dark:text-black tracking-tighter flex items-baseline">
+                        <span x-text="revenue">{{ number_format($revenue) }}</span><span class="text-sm ml-1 opacity-50">đ</span>
+                    </h3>
                     <div class="mt-6 flex items-center gap-2 text-[9px] font-black uppercase tracking-widest text-amber-500">
                         <i class="fa-solid fa-chart-line"></i> +12.5% Growth
                     </div>
@@ -48,63 +81,67 @@
                 <i class="fa-solid fa-coins absolute -bottom-4 -right-4 text-8xl opacity-10 dark:opacity-5 rotate-12"></i>
             </div>
 
-            
+            {{-- Pending --}}
             <div class="bg-white dark:bg-[#0a0a0a] border border-zinc-100 dark:border-white/5 rounded-[2rem] p-8 transition-all duration-500 hover:border-amber-500/50 group">
                 <div class="flex justify-between items-start mb-6">
                     <p class="text-zinc-400 text-[9px] font-black uppercase tracking-[0.3em]">Đơn chờ duyệt</p>
                     <div class="text-amber-500 group-hover:animate-pulse"><i class="fa-solid fa-hourglass-half"></i></div>
                 </div>
-                <h3 class="text-4xl font-black text-zinc-900 dark:text-white tracking-tighter">{{ $pendingBookings }}</h3>
+                <h3 class="text-4xl font-black text-zinc-900 dark:text-white tracking-tighter" x-text="pendingBookings">{{ $pendingBookings }}</h3>
                 <div class="mt-6 h-[1px] w-full bg-zinc-100 dark:bg-zinc-900 overflow-hidden">
-                    <div class="h-full bg-amber-500 transition-all duration-1000" style="width: {{ $pendingBookings > 0 ? '70%' : '0%' }}"></div>
+                    <div class="h-full bg-amber-500 transition-all duration-1000" :style="'width: ' + (pendingBookings > 0 ? '70%' : '0%')"></div>
                 </div>
             </div>
 
-            
+            {{-- Fleet --}}
             <div class="bg-white dark:bg-[#0a0a0a] border border-zinc-100 dark:border-white/5 rounded-[2rem] p-8 transition-all duration-500 hover:border-zinc-900 dark:hover:border-white/50 group">
                 <div class="flex justify-between items-start mb-6">
                     <p class="text-zinc-400 text-[9px] font-black uppercase tracking-[0.3em]">Tổng đội xe</p>
                     <div class="text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-white transition-colors"><i class="fa-solid fa-car-side"></i></div>
                 </div>
-                <h3 class="text-4xl font-black text-zinc-900 dark:text-white tracking-tighter">{{ $totalVehicles }}</h3>
+                <h3 class="text-4xl font-black text-zinc-900 dark:text-white tracking-tighter" x-text="totalVehicles">{{ $totalVehicles }}</h3>
                 <div class="mt-6 flex gap-4 text-[9px] font-black uppercase tracking-widest">
-                    <span class="text-emerald-500">{{ $availableCars }} Ready</span>
-                    <span class="text-rose-500">{{ $rentedCars }} Active</span>
+                    <span class="text-emerald-500"><span x-text="availableCars">{{ $availableCars }}</span> Ready</span>
+                    <span class="text-rose-500"><span x-text="rentedCars">{{ $rentedCars }}</span> Active</span>
                 </div>
             </div>
 
-            
+            {{-- Users --}}
             <div class="bg-white dark:bg-[#0a0a0a] border border-zinc-100 dark:border-white/5 rounded-[2rem] p-8 transition-all duration-500 group overflow-hidden">
                 <p class="text-zinc-400 text-[9px] font-black uppercase tracking-[0.3em] mb-6">Cộng đồng VIP</p>
                 <div class="flex items-center gap-4">
-                    <h3 class="text-4xl font-black text-zinc-900 dark:text-white tracking-tighter">{{ $totalUsers }}</h3>
+                    <h3 class="text-4xl font-black text-zinc-900 dark:text-white tracking-tighter" x-text="totalUsers">{{ $totalUsers }}</h3>
                     <div class="flex -space-x-3">
                         <img class="h-8 w-8 rounded-full border-2 border-white dark:border-[#0a0a0a] object-cover" src="https://i.pravatar.cc/100?img=1" alt=""/>
                         <img class="h-8 w-8 rounded-full border-2 border-white dark:border-[#0a0a0a] object-cover" src="https://i.pravatar.cc/100?img=2" alt=""/>
-                        <div class="h-8 w-8 rounded-full border-2 border-white dark:border-[#0a0a0a] bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-[8px] font-black text-zinc-500">+{{ $totalUsers > 2 ? $totalUsers - 2 : 0 }}</div>
+                        <div class="h-8 w-8 rounded-full border-2 border-white dark:border-[#0a0a0a] bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-[8px] font-black text-zinc-500">
+                             +<span x-text="totalUsers > 2 ? totalUsers - 2 : 0">0</span>
+                        </div>
                     </div>
                 </div>
                 <p class="mt-6 text-[9px] text-zinc-400 uppercase tracking-widest italic">Membership Tier: Elite</p>
             </div>
         </div>
 
-        
+        {{-- Main Content Grid --}}
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
-            
             
             <div class="lg:col-span-2 space-y-8">
                 
-                
-                <div class="bg-white dark:bg-[#0a0a0a] rounded-[2.5rem] p-10 border border-zinc-100 dark:border-white/5 shadow-sm">
+                {{-- Chart --}}
+                <div class="bg-white dark:bg-[#0a0a0a] rounded-[2.5rem] p-10 border border-zinc-100 dark:border-white/5 shadow-sm relative group">
                     <div class="flex justify-between items-center mb-10">
-                        <h3 class="font-black text-zinc-900 dark:text-white uppercase text-sm tracking-[0.2em]">Revenue Analytics</h3>
+                        <h3 class="font-black text-zinc-900 dark:text-white uppercase text-sm tracking-[0.2em] flex items-center gap-2">
+                            Revenue Analytics
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" x-show="!loading"></span>
+                        </h3>
                     </div>
                     <div class="h-72 w-full">
                         <canvas id="revenueChart"></canvas>
                     </div>
                 </div>
 
-                
+                {{-- Recent Transactions --}}
                 <div class="bg-white dark:bg-[#0a0a0a] rounded-[2.5rem] border border-zinc-100 dark:border-white/5 shadow-sm overflow-hidden">
                     <div class="p-8 border-b border-zinc-50 dark:border-white/5 flex justify-between items-center">
                         <h3 class="font-black text-zinc-900 dark:text-white uppercase text-sm tracking-[0.2em]">Giao dịch gần đây</h3>
@@ -174,7 +211,7 @@
             
             <div class="lg:col-span-1 space-y-6">
                 
-                
+                {{-- Quick Actions --}}
                 <div class="bg-zinc-900 dark:bg-white rounded-[2.5rem] p-10 text-white dark:text-black relative overflow-hidden group">
                     <div class="absolute -top-10 -right-10 w-40 h-40 bg-amber-500/20 rounded-full blur-3xl transition-all duration-1000 group-hover:scale-150"></div>
                     <h3 class="font-black text-sm uppercase tracking-[0.3em] mb-8 relative z-10">Quick Control</h3>
@@ -190,31 +227,30 @@
                     </div>
                 </div>
 
-                
+                {{-- Availability --}}
                 <div class="bg-white dark:bg-[#0a0a0a] rounded-[2.5rem] p-10 border border-zinc-100 dark:border-white/5 shadow-sm">
                     <h3 class="font-black text-zinc-900 dark:text-white uppercase text-[10px] tracking-[0.4em] mb-10 text-center">Fleet Availability</h3>
-                    @php 
-                        $availPercent = $totalVehicles > 0 ? round(($availableCars/$totalVehicles)*100) : 0;
-                    @endphp
                     <div class="relative flex items-center justify-center mb-10">
                         <svg class="w-32 h-32 transform -rotate-90">
                             <circle cx="64" cy="64" r="60" stroke="currentColor" stroke-width="4" fill="transparent" class="text-zinc-100 dark:text-zinc-900" />
                             <circle cx="64" cy="64" r="60" stroke="currentColor" stroke-width="4" fill="transparent" 
                                 stroke-dasharray="377" 
-                                stroke-dashoffset="{{ 377 - (377 * $availPercent / 100) }}" 
+                                :stroke-dashoffset="377 - (377 * (totalVehicles > 0 ? (availableCars/totalVehicles)*100 : 0) / 100)"
                                 class="text-amber-500 transition-all duration-1000" />
                         </svg>
-                        <span class="absolute text-2xl font-black text-zinc-900 dark:text-white">{{ $availPercent }}%</span>
+                        <span class="absolute text-2xl font-black text-zinc-900 dark:text-white">
+                            <span x-text="totalVehicles > 0 ? Math.round((availableCars/totalVehicles)*100) : 0">0</span>%
+                        </span>
                     </div>
                     <div class="space-y-4">
-                        <div class="flex justify-between text-[10px] font-black uppercase tracking-widest"><span class="text-zinc-400">Ready</span><span class="text-zinc-900 dark:text-white">{{ $availableCars }}</span></div>
-                        <div class="flex justify-between text-[10px] font-black uppercase tracking-widest"><span class="text-zinc-400">Active</span><span class="text-zinc-900 dark:text-white">{{ $rentedCars }}</span></div>
+                        <div class="flex justify-between text-[10px] font-black uppercase tracking-widest"><span class="text-zinc-400">Ready</span><span class="text-zinc-900 dark:text-white" x-text="availableCars">{{ $availableCars }}</span></div>
+                        <div class="flex justify-between text-[10px] font-black uppercase tracking-widest"><span class="text-zinc-400">Active</span><span class="text-zinc-900 dark:text-white" x-text="rentedCars">{{ $rentedCars }}</span></div>
                     </div>
                 </div>
             </div>
         </div>
 
-        
+        {{-- Users Table --}}
         <div class="bg-white dark:bg-[#0a0a0a] rounded-[2.5rem] border border-zinc-100 dark:border-white/5 shadow-sm overflow-hidden animate-page-entry" style="animation-delay: 0.2s">
             <div class="p-8 border-b border-zinc-50 dark:border-white/5 flex justify-between items-center bg-zinc-50/30 dark:bg-zinc-900/10">
                 <div>
@@ -281,40 +317,107 @@
 
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const ctx = document.getElementById('revenueChart').getContext('2d');
-        let gradient = ctx.createLinearGradient(0, 0, 0, 400);
-        gradient.addColorStop(0, 'rgba(245, 158, 11, 0.2)'); 
-        gradient.addColorStop(1, 'rgba(245, 158, 11, 0.0)'); 
+    function adminDashboard() {
+        return {
+            loading: false,
+            revenue: '{{ number_format($revenue) }}',
+            pendingBookings: {{ $pendingBookings }},
+            totalVehicles: {{ $totalVehicles }},
+            availableCars: {{ $availableCars }},
+            rentedCars: {{ $rentedCars }},
+            totalUsers: {{ $totalUsers }},
+            chartInstance: null,
 
-        new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-                datasets: [{
-                    data: [1200, 1900, 1400, 2500, 2100, 3400, 4500], 
-                    borderColor: '#f59e0b',
-                    backgroundColor: gradient,
-                    borderWidth: 4,
-                    pointRadius: 0,
-                    pointHoverRadius: 6,
-                    fill: true,
-                    tension: 0.4 
-                }]
+            init() {
+                this.initChart();
+                // Polling every 30 seconds
+                setInterval(() => {
+                    this.fetchStats();
+                }, 30000);
             },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: {
-                    y: { display: false },
-                    x: {
-                        grid: { display: false },
-                        ticks: { color: '#71717a', font: { size: 9, weight: '900' } }
+
+            async fetchStats(manual = false) {
+                if (manual) this.loading = true;
+                
+                try {
+                    const response = await fetch('{{ route('admin.dashboard.stats') }}', { headers: { 'Accept': 'application/json' } });
+                    const data = await response.json();
+                    
+                    this.revenue = data.revenue;
+                    this.pendingBookings = data.pendingBookings;
+                    this.totalVehicles = data.totalVehicles;
+                    this.availableCars = data.availableCars;
+                    this.rentedCars = data.rentedCars;
+                    this.totalUsers = data.totalUsers;
+
+                    this.updateChart(data.revenueData, data.chartLabels);
+                } catch (error) {
+                    console.error('Failed to fetch stats', error);
+                } finally {
+                    if (manual) setTimeout(() => this.loading = false, 500);
+                }
+            },
+
+            initChart() {
+                const ctx = document.getElementById('revenueChart').getContext('2d');
+                let gradient = ctx.createLinearGradient(0, 0, 0, 400);
+                gradient.addColorStop(0, 'rgba(245, 158, 11, 0.5)'); 
+                gradient.addColorStop(1, 'rgba(245, 158, 11, 0.0)'); 
+
+                const initialData = @json($revenueData);
+                const initialLabels = @json($chartLabels);
+
+                this.chartInstance = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: initialLabels,
+                        datasets: [{
+                            data: initialData, 
+                            borderColor: '#f59e0b',
+                            backgroundColor: gradient,
+                            borderWidth: 4,
+                            pointRadius: 4,
+                            pointHoverRadius: 8,
+                            pointBackgroundColor: '#fff',
+                            fill: true,
+                            tension: 0.4 
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            y: { 
+                                display: true, 
+                                grid: { color: 'rgba(255,255,255,0.05)' },
+                                ticks: { callback: (val) => val / 1000000 + 'M' }
+                            },
+                            x: {
+                                grid: { display: false },
+                                ticks: { color: '#71717a', font: { size: 10, weight: 'bold' } }
+                            }
+                        },
+                        interaction: {
+                            intersect: false,
+                            mode: 'index',
+                        },
                     }
+                });
+            },
+
+            updateChart(data, labels) {
+                if (this.chartInstance) {
+                    this.chartInstance.data.labels = labels;
+                    this.chartInstance.data.datasets[0].data = data;
+                    this.chartInstance.update();
                 }
             }
-        });
+        }
+    }
+
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('adminDashboard', adminDashboard);
     });
 </script>
 

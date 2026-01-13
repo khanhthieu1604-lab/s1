@@ -39,7 +39,7 @@
                             <div class="w-full md:w-48 h-32 flex-shrink-0 bg-gray-100 dark:bg-[#1a1a1a] rounded-xl overflow-hidden relative">
                                 <img src="{{ str_starts_with($booking->vehicle->image, 'http') ? $booking->vehicle->image : asset('storage/' . $booking->vehicle->image) }}" 
                                      class="w-full h-full object-cover"
-                                     onerror="this.src='https://placehold.co/400x300/222/white?text=Car'">
+                                     onerror="this.src='https://images.unsplash.com/photo-1552519507-da3b142c6e3d?q=80&w=400'">
                             </div>
 
                             

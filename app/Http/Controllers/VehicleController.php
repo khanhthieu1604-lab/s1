@@ -16,7 +16,7 @@ class VehicleController extends Controller
         $vehicles = Vehicle::with('brand')
             ->where('status', 'available')
             ->latest()
-            ->take(6) 
+            ->take(8) 
             ->get();
 
         return view('welcome', compact('vehicles'));
@@ -27,23 +27,22 @@ class VehicleController extends Controller
     {
         $query = Vehicle::with('brand')->where('status', 'available');
 
-        
+        // Search
         if ($request->filled('search')) {
             $query->where('name', 'like', '%' . $request->search . '%');
         }
 
-        
-        
+        // Location (Future implementation)
         if ($request->filled('location')) {
-            
+            $query->where('location', 'like', '%' . $request->location . '%');
         }
 
-        
+        // Category Filter
         if ($request->filled('category')) {
             $query->where('type', $request->category);
         }
 
-        
+        // Price Filter
         if ($request->filled('price')) {
             if ($request->price == 'under_1m') {
                 $query->where('price', '<', 1000000);
@@ -53,6 +52,10 @@ class VehicleController extends Controller
         }
 
         $vehicles = $query->latest()->paginate(12)->withQueryString();
+
+        if ($request->ajax()) {
+            return view('vehicles._grid', compact('vehicles'));
+        }
 
         return view('vehicles.index', compact('vehicles'));
     }

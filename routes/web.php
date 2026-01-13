@@ -75,6 +75,7 @@ Route::middleware(['auth'])->group(function () {
     Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
         
         Route::get('/dashboard', [AdminController::class, 'index'])->name('dashboard');
+        Route::get('/dashboard/stats', [AdminController::class, 'stats'])->name('dashboard.stats');
 
         
         Route::post('/about/update', [AdminController::class, 'updateAbout'])->name('about.update');
@@ -82,6 +83,7 @@ Route::middleware(['auth'])->group(function () {
         
         Route::prefix('bookings')->name('bookings.')->group(function () {
             Route::get('/', [BookingController::class, 'history'])->name('index'); 
+            Route::get('/{id}', [BookingController::class, 'show'])->name('show');
             Route::patch('/{id}', [AdminController::class, 'updateStatus'])->name('update');
         });
 

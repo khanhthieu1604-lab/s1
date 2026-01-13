@@ -54,6 +54,7 @@
                 
                 <div class="h-56 overflow-hidden relative">
                     <img src="{{ str_starts_with($vehicle->image, 'http') ? $vehicle->image : asset('storage/' . $vehicle->image) }}" 
+                         class="h-10 w-10 rounded-full object-cover" onerror="this.src='https://images.unsplash.com/photo-1552519507-da3b142c6e3d?q=80&w=100'"> 
                          alt="{{ $vehicle->name }}" 
                          class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700">
                     <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60"></div>

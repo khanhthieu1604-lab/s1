@@ -1,6 +1,6 @@
 import { defineConfig } from 'vite';
 import laravel from 'laravel-vite-plugin';
-import path from 'path'; // Thêm để cấu hình Alias
+import path from 'path';
 
 export default defineConfig({
     plugins: [
@@ -9,19 +9,27 @@ export default defineConfig({
                 'resources/css/app.css', 
                 'resources/js/app.js'
             ],
-            refresh: true, // Tự động reload trình duyệt khi sửa file
+            refresh: true,
         }),
     ],
+    // Cấu hình Server để hỗ trợ ngrok và Docker
+    server: {
+        host: '0.0.0.0', // Cho phép truy cập từ bên ngoài container
+        port: 5173,      // Cổng mặc định của Vite
+        strictPort: true,
+        hmr: {
+            host: 'localhost', // Vite sẽ gửi các gói tin HMR qua localhost để tunnel nhận diện
+        },
+        // Quan trọng: Cho phép các domain ngrok truy cập vào server Vite
+        allowedHosts: ['.ngrok-free.app', '.ngrok.io'] 
+    },
     resolve: {
         alias: {
-            // Cho phép dùng '@' để trỏ nhanh vào thư mục resources/js
             '@': path.resolve(__dirname, './resources/js'),
-            // Alias cho các file CSS/SCSS nếu cần
             '~': path.resolve(__dirname, './resources'),
         },
     },
     build: {
-        // Tối ưu hóa việc gom nhóm file (Chunking) để trang web tải nhanh hơn
         chunkSizeWarningLimit: 1600,
         rollupOptions: {
             output: {

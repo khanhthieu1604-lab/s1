@@ -1,11 +1,26 @@
 import './bootstrap';
-
-// Sử dụng import trực tiếp từ package name để Vite tự động phân giải đường dẫn chuẩn
-import anime from 'animejs'; 
+import { animate, createTimeline } from 'animejs';
 import Alpine from 'alpinejs';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import Lenis from 'lenis';
+
+// Swiper
+import Swiper from 'swiper/bundle';
+import 'swiper/css/bundle';
+
+// Register GSAP plugins
+gsap.registerPlugin(ScrollTrigger);
+
+// Adapter for Anime.js v4 to maintain v3 compatibility
+const anime = (params) => animate(params);
+anime.timeline = (params) => createTimeline(params);
 
 window.Alpine = Alpine;
-// Gán anime vào đối tượng window để có thể gọi từ các file Blade (như file welcome.blade.php bạn vừa sửa)
 window.anime = anime;
+window.Swiper = Swiper;
+window.gsap = gsap;
+window.ScrollTrigger = ScrollTrigger;
+window.Lenis = Lenis;
 
 Alpine.start();

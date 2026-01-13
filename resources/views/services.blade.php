@@ -60,7 +60,8 @@
         <section class="relative h-[85vh] flex items-center justify-center pt-20">
             <div class="absolute inset-0 z-0">
                 <img src="https://images.unsplash.com/photo-1503376763036-066120622c74?q=80&w=2070" 
-                     class="w-full h-full object-cover opacity-30 dark:opacity-40" id="hero-img">
+                     class="w-full h-full object-cover opacity-30 dark:opacity-40" id="hero-img"
+                     onerror="this.src='https://images.unsplash.com/photo-1552519507-da3b142c6e3d?q=80&w=2070'">
                 
                 <div class="absolute inset-0 bg-gradient-to-t from-white via-transparent to-white dark:from-[#050505] dark:to-[#050505]"></div>
             </div>
@@ -131,7 +132,8 @@
                             </a>
                         </div>
                         <div class="rounded-[3rem] overflow-hidden border border-gray-200 dark:border-white/10 shadow-2xl relative">
-                            <img src="https://images.unsplash.com/photo-1560179707-f14e90ef3623?q=80&w=2073" class="w-full h-full object-cover">
+                            <img src="https://images.unsplash.com/photo-1560179707-f14e90ef3623?q=80&w=2073" class="w-full h-full object-cover"
+                                 onerror="this.src='https://images.unsplash.com/photo-1552519507-da3b142c6e3d?q=80&w=2000'">
                         </div>
                     </div>
                 </div>
