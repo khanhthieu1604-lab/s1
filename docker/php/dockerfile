@@ -4,7 +4,7 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm install
 COPY . .
-RUN npm run build
+RUN npm run dev
 
 # Stage 2: Serve with PHP-FPM
 FROM php:8.2-fpm
